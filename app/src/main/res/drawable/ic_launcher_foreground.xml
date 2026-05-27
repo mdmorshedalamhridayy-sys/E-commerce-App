@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Shadow effect for the launcher logo -->
+    <path
+        android:fillColor="#15000000"
+        android:pathData="M32 38l44 0 -4 46 -36 0 z" />
+
+    <!-- Shopping Bag Body (White) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,36 L74,36 C75.5,36 76.7,37.1 77,38.5 L82,78 C82.3,79.5 81.1,81 79.5,81 L28.5,81 C26.9,81 25.7,79.5 26,78 L31,38.5 C31.3,37.1 32.5,36 34,36 Z" />
+
+    <!-- Shopping Bag Handle (Golden Jute Accent) -->
+    <path
+        android:strokeColor="#FFC72C"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M 44,36 C 44,24 64,24 64,36" />
+
+    <!-- Centered Red Heart cutout for 'Hriday' (Vibrant Sun Red) -->
+    <path
+        android:fillColor="#F42A41"
+        android:pathData="M54,64 C54,64 42,56 42,49.5 C42,46 44.5,43.5 48,43.5 C50.5,43.5 52.5,45.5 54,47 C55.5,45.5 57.5,43.5 60,43.5 C63.5,43.5 66,46 66,49.5 C66,56 54,64 54,64 Z" />
+
+</vector>

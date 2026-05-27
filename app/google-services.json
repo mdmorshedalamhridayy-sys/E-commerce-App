@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "138930793334",
+    "project_id": "tubebook-e2488",
+    "storage_bucket": "tubebook-e2488.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138930793334:android:2d5fc96a9e332ed6406857",
+        "android_client_info": {
+          "package_name": "com.tubebook.tubebook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWLZxpA1aXrzM2FhXtZAShPlb1T3iPYYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Hriday Store",
+  "description": "Hriday Store - A full-featured marketplace e-commerce application with bilingual (Bangla and English) support, featuring Buyer, Seller, and Admin store dashboards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
