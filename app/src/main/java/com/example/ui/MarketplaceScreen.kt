@@ -45,6 +45,7 @@ import com.example.ui.theme.*
 @Composable
 fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
     val isEnglish by viewModel.isEnglish.collectAsStateWithLifecycle()
+    val appMode by viewModel.appMode.collectAsStateWithLifecycle()
     val currentSection by viewModel.currentSection.collectAsStateWithLifecycle()
     val unreadNotifCount by viewModel.unreadNotificationsCount.collectAsStateWithLifecycle()
     val isNotifOpen by viewModel.activeNotificationCenterOpen.collectAsStateWithLifecycle()
@@ -53,6 +54,11 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
     val currentBuyerPhone by viewModel.currentBuyerPhone.collectAsStateWithLifecycle()
     val currentBuyerAddress by viewModel.currentBuyerAddress.collectAsStateWithLifecycle()
 
+    if (appMode == "LAUNCHER") {
+        AppLauncherHub(viewModel, isEnglish)
+        return
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -60,20 +66,20 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Dynamic Red-Green Logo representing Hriday Store
+                        // Dynamic Logo representing Hriday Store or Admin Panel
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(
                                     Brush.radialGradient(
-                                        colors = listOf(BengalRed40, BengalGreen40)
+                                        colors = if (appMode == "ADMIN_APP") listOf(BengalGold, BengalRed40) else listOf(BengalRed40, BengalGreen40)
                                     ),
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "H",
+                                text = if (appMode == "ADMIN_APP") "A" else "H",
                                 color = Color.White,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 18.sp
@@ -81,9 +87,13 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = Loc.get("app_name", isEnglish),
+                            text = if (appMode == "ADMIN_APP") {
+                                if (isEnglish) "Store Admin" else "স্টোর অ্যাডমিন"
+                            } else {
+                                Loc.get("app_name", isEnglish)
+                            },
                             fontWeight = FontWeight.Bold,
-                            color = BengalGreen40,
+                            color = if (appMode == "ADMIN_APP") BengalRed40 else BengalGreen40,
                             letterSpacing = 0.5.sp
                         )
                     }
@@ -106,7 +116,7 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
                             Icon(
                                 imageVector = Icons.Default.Language,
                                 contentDescription = "Language",
-                                tint = BengalGreen40,
+                                tint = if (appMode == "ADMIN_APP") BengalRed40 else BengalGreen40,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -114,7 +124,7 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
                                 text = if (isEnglish) "বাংলা" else "ENG",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = BengalGreen40
+                                color = if (appMode == "ADMIN_APP") BengalRed40 else BengalGreen40
                             )
                         }
                     }
@@ -122,7 +132,7 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
                     // Dynamic Push Notification Button
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 4.dp)
                     ) {
                         IconButton(
                             onClick = {
@@ -134,7 +144,7 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = "Alerts",
-                                tint = BengalGreen40,
+                                tint = if (appMode == "ADMIN_APP") BengalRed40 else BengalGreen40,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -156,61 +166,62 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
                             }
                         }
                     }
+
+                    // Dual-App Platform Switcher Grid Button
+                    IconButton(
+                        onClick = { viewModel.setAppMode("LAUNCHER") },
+                        modifier = Modifier.testTag("launcher_switcher_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Apps,
+                            contentDescription = "Switch App Mode",
+                            tint = if (appMode == "ADMIN_APP") BengalRed40 else BengalGreen40,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
-                    titleContentColor = BengalGreen40
+                    titleContentColor = if (appMode == "ADMIN_APP") BengalRed40 else BengalGreen40
                 )
             )
         },
         bottomBar = {
-            // Persistent Section Controller Navigation (Smooth transition between Buyer, Seller, and Admin)
-            NavigationBar(
-                containerColor = Color.White,
-                tonalElevation = 8.dp,
-                modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
-            ) {
-                NavigationBarItem(
-                    selected = currentSection == "BUYER",
-                    onClick = { viewModel.setSection("BUYER") },
-                    icon = { Icon(Icons.Default.Storefront, contentDescription = "Buyer Dashboard") },
-                    label = { Text(if (isEnglish) "Shop" else "মার্কেট", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = BengalGreen40,
-                        selectedTextColor = BengalGreen40,
-                        indicatorColor = BengalGreen80.copy(alpha = 0.3f),
-                        unselectedIconColor = Color.Gray
-                    ),
-                    modifier = Modifier.testTag("nav_buyer_tab")
-                )
+            if (appMode == "USER_APP") {
+                // Persistent Section Controller Navigation (Strictly User-Facing: Marketplace and Seller Portal, Admin deleted!)
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp,
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                ) {
+                    NavigationBarItem(
+                        selected = currentSection == "BUYER",
+                        onClick = { viewModel.setSection("BUYER") },
+                        icon = { Icon(Icons.Default.Storefront, contentDescription = "Buyer Dashboard") },
+                        label = { Text(if (isEnglish) "Shop" else "মার্কেট", fontSize = 11.sp) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = BengalGreen40,
+                            selectedTextColor = BengalGreen40,
+                            indicatorColor = BengalGreen80.copy(alpha = 0.3f),
+                            unselectedIconColor = Color.Gray
+                        ),
+                        modifier = Modifier.testTag("nav_buyer_tab")
+                    )
 
-                NavigationBarItem(
-                    selected = currentSection == "SELLER",
-                    onClick = { viewModel.setSection("SELLER") },
-                    icon = { Icon(Icons.Default.AddHomeWork, contentDescription = "Seller portal") },
-                    label = { Text(if (isEnglish) "Seller" else "বিক্রেতা", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = BengalGreen40,
-                        selectedTextColor = BengalGreen40,
-                        indicatorColor = BengalGreen80.copy(alpha = 0.3f),
-                        unselectedIconColor = Color.Gray
-                    ),
-                    modifier = Modifier.testTag("nav_seller_tab")
-                )
-
-                NavigationBarItem(
-                    selected = currentSection == "ADMIN",
-                    onClick = { viewModel.setSection("ADMIN") },
-                    icon = { Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin panel") },
-                    label = { Text(if (isEnglish) "Admin" else "অ্যাডমিন", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = BengalGreen40,
-                        selectedTextColor = BengalGreen40,
-                        indicatorColor = BengalGreen80.copy(alpha = 0.3f),
-                        unselectedIconColor = Color.Gray
-                    ),
-                    modifier = Modifier.testTag("nav_admin_tab")
-                )
+                    NavigationBarItem(
+                        selected = currentSection == "SELLER",
+                        onClick = { viewModel.setSection("SELLER") },
+                        icon = { Icon(Icons.Default.AddHomeWork, contentDescription = "Seller portal") },
+                        label = { Text(if (isEnglish) "Seller" else "বিক্রেতা", fontSize = 11.sp) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = BengalGreen40,
+                            selectedTextColor = BengalGreen40,
+                            indicatorColor = BengalGreen80.copy(alpha = 0.3f),
+                            unselectedIconColor = Color.Gray
+                        ),
+                        modifier = Modifier.testTag("nav_seller_tab")
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -222,7 +233,7 @@ fun MarketplaceScreen(viewModel: MarketplaceViewModel) {
         ) {
             // Main Content Area switching between dashboards
             AnimatedContent(
-                targetState = currentSection,
+                targetState = if (appMode == "ADMIN_APP") "ADMIN" else currentSection,
                 transitionSpec = {
                     slideInVertically(initialOffsetY = { it }) + fadeIn() togetherWith
                             slideOutVertically(targetOffsetY = { -it }) + fadeOut()
@@ -2224,6 +2235,298 @@ fun AdminMainLayout(viewModel: MarketplaceViewModel, isEnglish: Boolean) {
                     }
                 }
             }
+
+            // ⚙️ SYSTEM & PAYMENT CUSTOMIZATION BY ADMIN
+            item {
+                val isBkash by viewModel.isBkashEnabled.collectAsStateWithLifecycle()
+                var bkashNo by remember { mutableStateOf(viewModel.bkashPersonalNumber.value) }
+
+                val isNagad by viewModel.isNagadEnabled.collectAsStateWithLifecycle()
+                var nagadNo by remember { mutableStateOf(viewModel.nagadPersonalNumber.value) }
+
+                val isRocket by viewModel.isRocketEnabled.collectAsStateWithLifecycle()
+                var rocketNo by remember { mutableStateOf(viewModel.rocketPersonalNumber.value) }
+
+                val isCod by viewModel.isCodEnabled.collectAsStateWithLifecycle()
+
+                var instBnText by remember { mutableStateOf(viewModel.customPaymentInstructionsBn.value) }
+                var instEnText by remember { mutableStateOf(viewModel.customPaymentInstructionsEn.value) }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth().testTag("payment_customization_card"),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, CardBorderColor)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "⚙️",
+                                fontSize = 18.sp
+                            )
+                            Text(
+                                text = if (isEnglish) "Payment Gateways & System Settings" else "পেমেন্ট গেটওয়ে এবং সিস্টেম সেটিংস",
+                                fontWeight = FontWeight.Bold,
+                                color = BengalGreen40,
+                                fontSize = 14.sp
+                            )
+                        }
+                        Text(
+                            text = if (isEnglish) {
+                                "Configure recipient phone numbers, toggle payment channels, and write custom billing desk instructions."
+                            } else {
+                                "গ্রাহকদের পেমেন্টের জন্য ফোন নম্বর নির্ধারণ, পেমেন্ট চ্যানেল সক্রিয়/নিষ্ক্রিয় এবং নির্দেশাবলী লিখুন।"
+                            },
+                            fontSize = 11.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        // A. CASH ON DELIVERY SYSTEM
+                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = if (isEnglish) "Cash on Delivery (COD)" else "ক্যাশ অন ডেলিভারি (COD)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = BengalDark700
+                                    )
+                                    Text(
+                                        text = if (isEnglish) "Allows users to choose post-delivery payments" else "পণ্য পাওয়ার পর মূল্য পরিশোধ অপশন চালু করুন",
+                                        fontSize = 10.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clickable { viewModel.isCodEnabled.value = !isCod }
+                                        .background(
+                                            color = if (isCod) BengalGreen40 else Color.LightGray.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = if (isCod) (if (isEnglish) "ACTIVE" else "সক্রিয়") else (if (isEnglish) "DISABLED" else "বন্ধ"),
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        // B. BKASH PAYMENT SYSTEM
+                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "bKash Gateway (বিকাশ গেটওয়ে)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFFE2136E)
+                                    )
+                                    Text(
+                                        text = if (isEnglish) "Enable digital transfers via bKash personal wallet" else "বিকাশ ওয়ালেট মারফত পেমেন্ট গ্রহণ চালু করুন",
+                                        fontSize = 10.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clickable { viewModel.isBkashEnabled.value = !isBkash }
+                                        .background(
+                                            color = if (isBkash) Color(0xFFE2136E) else Color.LightGray.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = if (isBkash) (if (isEnglish) "ACTIVE" else "সক্রিয়") else (if (isEnglish) "DISABLED" else "বন্ধ"),
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (isBkash) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = bkashNo,
+                                    onValueChange = {
+                                        bkashNo = it
+                                        viewModel.bkashPersonalNumber.value = it
+                                    },
+                                    label = { Text(if (isEnglish) "bKash Personal No" else "বিকাশ পার্সোনাল নম্বর") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                                )
+                            }
+                        }
+
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        // C. NAGAD PAYMENT SYSTEM
+                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Nagad Gateway (নগদ গেটওয়ে)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFFF15A22)
+                                    )
+                                    Text(
+                                        text = if (isEnglish) "Enable digital transfers via Nagad personal wallet" else "নগদ ওয়ালেট মারফত পেমেন্ট গ্রহণ চালু করুন",
+                                        fontSize = 10.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clickable { viewModel.isNagadEnabled.value = !isNagad }
+                                        .background(
+                                            color = if (isNagad) Color(0xFFF15A22) else Color.LightGray.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = if (isNagad) (if (isEnglish) "ACTIVE" else "সক্রিয়") else (if (isEnglish) "DISABLED" else "বন্ধ"),
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (isNagad) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = nagadNo,
+                                    onValueChange = {
+                                        nagadNo = it
+                                        viewModel.nagadPersonalNumber.value = it
+                                    },
+                                    label = { Text(if (isEnglish) "Nagad Personal No" else "নগদ পার্সোনাল নম্বর") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                                )
+                            }
+                        }
+
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        // D. ROCKET PAYMENT SYSTEM
+                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Rocket Gateway (রকেট গেটওয়ে)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF8C3494)
+                                    )
+                                    Text(
+                                        text = if (isEnglish) "Enable digital transfers via Rocket personal wallet" else "রকেট ওয়ালেট মারফত পেমেন্ট গ্রহণ চালু করুন",
+                                        fontSize = 10.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clickable { viewModel.isRocketEnabled.value = !isRocket }
+                                        .background(
+                                            color = if (isRocket) Color(0xFF8C3494) else Color.LightGray.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = if (isRocket) (if (isEnglish) "ACTIVE" else "সক্রিয়") else (if (isEnglish) "DISABLED" else "বন্ধ"),
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (isRocket) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = rocketNo,
+                                    onValueChange = {
+                                        rocketNo = it
+                                        viewModel.rocketPersonalNumber.value = it
+                                    },
+                                    label = { Text(if (isEnglish) "Rocket Personal No" else "রকেট পার্সোনাল নম্বর") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                                )
+                            }
+                        }
+
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        // E. CUSTOM BILLING MANUAL INSTRUCTIONS
+                        Text(
+                            text = if (isEnglish) "Custom Payment Instructions:" else "পেমেন্ট সম্পন্ন করার নির্দেশাবলী কাস্টমাইজ করুন:",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = BengalDark700
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        OutlinedTextField(
+                            value = instBnText,
+                            onValueChange = {
+                                instBnText = it
+                                viewModel.customPaymentInstructionsBn.value = it
+                            },
+                            label = { Text(if (isEnglish) "Bangla Instructions" else "বাংলা নির্দেশাবলী") },
+                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 3
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = instEnText,
+                            onValueChange = {
+                                instEnText = it
+                                viewModel.customPaymentInstructionsEn.value = it
+                            },
+                            label = { Text(if (isEnglish) "English Instructions" else "ইংরেজি নির্দেশাবলী") },
+                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 3
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -2433,7 +2736,33 @@ fun CheckoutOverlayPanel(
     val myBuyerPhone by viewModel.currentBuyerPhone.collectAsStateWithLifecycle()
     val myBuyerAddress by viewModel.currentBuyerAddress.collectAsStateWithLifecycle()
 
-    var billingMethod by remember { mutableStateOf("Cash on Delivery") }
+    val isBkashEnabled by viewModel.isBkashEnabled.collectAsStateWithLifecycle()
+    val bkashNum by viewModel.bkashPersonalNumber.collectAsStateWithLifecycle()
+    val isNagadEnabled by viewModel.isNagadEnabled.collectAsStateWithLifecycle()
+    val nagadNum by viewModel.nagadPersonalNumber.collectAsStateWithLifecycle()
+    val isRocketEnabled by viewModel.isRocketEnabled.collectAsStateWithLifecycle()
+    val rocketNum by viewModel.rocketPersonalNumber.collectAsStateWithLifecycle()
+    val isCodEnabled by viewModel.isCodEnabled.collectAsStateWithLifecycle()
+    val instBn by viewModel.customPaymentInstructionsBn.collectAsStateWithLifecycle()
+    val instEn by viewModel.customPaymentInstructionsEn.collectAsStateWithLifecycle()
+
+    var billingMethod by remember { mutableStateOf("") }
+    var txId by remember { mutableStateOf("") }
+    var senderPhone by remember { mutableStateOf("") }
+
+    val paymentOptions = remember(isCodEnabled, isBkashEnabled, isNagadEnabled, isRocketEnabled) {
+        mutableListOf<String>().apply {
+            if (isCodEnabled) add("Cash on Delivery")
+            if (isBkashEnabled) add("bKash")
+            if (isNagadEnabled) add("Nagad")
+            if (isRocketEnabled) add("Rocket")
+            if (isEmpty()) add("Cash on Delivery")
+        }
+    }
+
+    if (billingMethod.isEmpty() || billingMethod !in paymentOptions) {
+        billingMethod = paymentOptions.firstOrNull() ?: "Cash on Delivery"
+    }
 
     Box(
         modifier = Modifier
@@ -2525,46 +2854,154 @@ fun CheckoutOverlayPanel(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
                             .padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { billingMethod = "Cash on Delivery" }
-                                .background(
-                                    color = if (billingMethod == "Cash on Delivery") BengalGreen40 else OffWhiteBg,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = Loc.get("cod", isEnglish),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (billingMethod == "Cash on Delivery") Color.White else BengalDark700
-                            )
+                        paymentOptions.forEach { option ->
+                            val isSelected = billingMethod == option
+                            val badgeColor = when (option) {
+                                "bKash" -> Color(0xFFE2136E)
+                                "Nagad" -> Color(0xFFF15A22)
+                                "Rocket" -> Color(0xFF8C3494)
+                                else -> BengalGreen40 // COD
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clickable { billingMethod = option }
+                                    .background(
+                                        color = if (isSelected) badgeColor else OffWhiteBg,
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isSelected) badgeColor else Color.LightGray.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .background(
+                                                color = if (isSelected) Color.White else Color.Gray,
+                                                shape = CircleShape
+                                            )
+                                    )
+                                    Text(
+                                        text = when(option) {
+                                            "Cash on Delivery" -> if (isEnglish) "Cash on Delivery" else "ক্যাশ অন ডেলিভারি"
+                                            "bKash" -> "bKash"
+                                            "Nagad" -> "Nagad"
+                                            "Rocket" -> "Rocket"
+                                            else -> option
+                                        },
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else BengalDark700
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (billingMethod in listOf("bKash", "Nagad", "Rocket")) {
+                        val activeNumber = when (billingMethod) {
+                            "bKash" -> bkashNum
+                            "Nagad" -> nagadNum
+                            "Rocket" -> rocketNum
+                            else -> ""
+                        }
+                        val gateColor = when (billingMethod) {
+                            "bKash" -> Color(0xFFE2136E)
+                            "Nagad" -> Color(0xFFF15A22)
+                            "Rocket" -> Color(0xFF8C3494)
+                            else -> BengalGreen40
                         }
 
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { billingMethod = "Online Payment" }
-                                .background(
-                                    color = if (billingMethod == "Online Payment") BengalGreen40 else OffWhiteBg,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(8.dp),
-                            contentAlignment = Alignment.Center
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = gateColor.copy(alpha = 0.05f)),
+                            border = BorderStroke(1.dp, gateColor.copy(alpha = 0.2f)),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                text = Loc.get("online_pay", isEnglish),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (billingMethod == "Online Payment") Color.White else BengalDark700
-                            )
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = if (isEnglish) "Recipient Merchant/Personal No:" else "প্রাপক পার্সোনাল নম্বর:",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = gateColor
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .background(gateColor, shape = RoundedCornerShape(4.dp))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isEnglish) "Send Money" else "সেন্ড মানি",
+                                            color = Color.White,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = activeNumber,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = gateColor,
+                                    letterSpacing = 1.sp,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = if (isEnglish) instEn else instBn,
+                                    fontSize = 10.sp,
+                                    color = Color.DarkGray,
+                                    lineHeight = 14.sp
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = if (isEnglish) "Transaction Details:" else "পেমেন্ট ট্রানজেকশন তথ্য:",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = BengalDark700
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        OutlinedTextField(
+                            value = txId,
+                            onValueChange = { txId = it },
+                            label = { Text(if (isEnglish) "Transaction ID (TxID)" else "ট্রানজেকশন আইডি (TxID)") },
+                            placeholder = { Text("e.g. K9B82HG9A") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = senderPhone,
+                            onValueChange = { senderPhone = it },
+                            label = { Text(if (isEnglish) "Sender Mobile Number" else "প্রেরক মোবাইল নম্বর") },
+                            placeholder = { Text("e.g. 017XXXXXXXX") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -2572,9 +3009,17 @@ fun CheckoutOverlayPanel(
                     Button(
                         onClick = {
                             if (myBuyerName.isNotBlank() && myBuyerPhone.isNotBlank() && myBuyerAddress.isNotBlank()) {
-                                viewModel.triggerOrderPlacement(billingMethod)
+                                val methodString = if (billingMethod in listOf("bKash", "Nagad", "Rocket")) {
+                                    "$billingMethod (TxID: $txId, Sender: $senderPhone)"
+                                } else {
+                                    billingMethod
+                                }
+                                viewModel.triggerOrderPlacement(methodString)
                             }
                         },
+                        enabled = myBuyerName.isNotBlank() && myBuyerPhone.isNotBlank() && myBuyerAddress.isNotBlank() && (
+                            billingMethod == "Cash on Delivery" || (txId.isNotBlank() && senderPhone.isNotBlank())
+                        ),
                         colors = ButtonDefaults.buttonColors(containerColor = BengalGreen40),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth().testTag("place_order_submit")
@@ -2988,6 +3433,235 @@ fun UserAuthGate(
                     fontSize = 12.sp
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun AppLauncherHub(viewModel: MarketplaceViewModel, isEnglish: Boolean) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFF4FAF6),
+                        Color(0xFFE8F5E9)
+                    )
+                )
+            )
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 500.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header Logo Group
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(BengalRed40, BengalGreen40)
+                        ),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "H",
+                    color = Color.White,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 40.sp,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = if (isEnglish) "Hriday Hub Launcher" else "হৃদয় হাব লাঞ্চার",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 25.sp,
+                    color = BengalDark700,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = if (isEnglish) "Dual Sandbox Application Environment" else "যুগ্ম স্যান্ডবক্স অ্যাপ্লিকেশন পরিবেশ",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // CARD 1: USER APP (BUYER & SELLER PORTAL)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.setAppMode("USER_APP") }
+                    .testTag("launch_user_app"),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                border = BorderStroke(1.dp, BengalGreen40.copy(alpha = 0.2f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .background(BengalGreen80.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Storefront,
+                            contentDescription = "User App Icon",
+                            tint = BengalGreen40,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = if (isEnglish) "Hriday Marketplace" else "হৃদয় মার্কেটপ্লেস",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = BengalDark700
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .background(BengalGreen40.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (isEnglish) "Production" else "সক্রিয়",
+                                    color = BengalGreen40,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isEnglish) {
+                                "Premium artisan handicrafts & fabrics store with integrated buyer login, custom profiles, and local merchant hub."
+                            } else {
+                                "প্রিমিয়াম হস্তশিল্প ও হস্তনির্মিত সুতার বস্ত্র বিপণন কেন্দ্র। ক্রেতা ইন্টিগ্রেশন এবং মার্চেন্ট পোর্টাল যুক্ত।"
+                            },
+                            fontSize = 11.sp,
+                            color = Color.Gray,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+
+            // CARD 2: STANDALONE ADMIN CENTRAL CONSOLE APP
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.setAppMode("ADMIN_APP") }
+                    .testTag("launch_admin_app"),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                border = BorderStroke(1.dp, BengalRed40.copy(alpha = 0.2f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .background(BengalRed80.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AdminPanelSettings,
+                            contentDescription = "Admin App Icon",
+                            tint = BengalRed40,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = if (isEnglish) "Store Admin Console" else "স্টোর অ্যাডমিন কনসোল",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = BengalDark700
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .background(BengalRed40.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (isEnglish) "Protected Core" else "সুরক্ষিত কোর",
+                                    color = BengalRed40,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isEnglish) {
+                                "Isolated administrative suite. Review platform analytics, add products, adjust pricing, and resolve disputes securely."
+                            } else {
+                                "আইসোলেটেড অ্যাডমিনিস্ট্রেটর পোর্টাল। পণ্যের তালিকা, সেলস হিস্টোরি, লাভ ট্র্যাকার এবং বিরোধ নিষ্পত্তির প্যানেল।"
+                            },
+                            fontSize = 11.sp,
+                            color = Color.Gray,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Sub-footer info
+            Text(
+                text = if (isEnglish) {
+                    "Press the App Switcher icon on top of either app to return to this selection screen."
+                } else {
+                    "যেকোন অ্যাপের ওপরের সুইচার আইকনে চাপ দিয়ে পুনরায় এই হাব স্ক্রিনে ফিরে আসতে পারবেন।"
+                },
+                fontSize = 10.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
         }
     }
 }

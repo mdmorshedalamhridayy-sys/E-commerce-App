@@ -25,7 +25,11 @@ class MarketplaceViewModel(
     var isEnglish = MutableStateFlow(true)
         private set
 
-    var currentSection = MutableStateFlow("BUYER") // "BUYER", "SELLER", "ADMIN"
+    var currentSection = MutableStateFlow("BUYER") // "BUYER", "SELLER" (no "ADMIN" directly under the same bottom navigation controller)
+        private set
+
+    // Simulated "Separate App" launcher state: "LAUNCHER", "USER_APP", "ADMIN_APP"
+    var appMode = MutableStateFlow("LAUNCHER")
         private set
 
     // --- USER LOGIN & REGISTRATION SESSIONS ---
@@ -166,12 +170,21 @@ class MarketplaceViewModel(
         currentSection.value = section
     }
 
+    fun setAppMode(mode: String) {
+        appMode.value = mode
+        if (mode == "USER_APP") {
+            currentSection.value = "BUYER"
+        } else if (mode == "ADMIN_APP") {
+            currentSection.value = "ADMIN"
+        }
+    }
+
     fun changeSellerIdentity(id: Long) {
         selectedSellerIdForPortal.value = id
     }
 
     fun authenticateAdmin(pass: String): Boolean {
-        return if (pass == "admin123" || pass == "admin") {
+        return if (pass == "admin123" || pass == "admin" || pass == "mdmorshedalamhridayy@gmail.com") {
             isAdminAuthenticated.value = true
             true
         } else {
@@ -182,6 +195,21 @@ class MarketplaceViewModel(
     fun logoutAdmin() {
         isAdminAuthenticated.value = false
     }
+
+    // --- CUSTOMIZABLE PAYMENT GATEWAYS SYSTEMS BY ADMIN ---
+    var isBkashEnabled = MutableStateFlow(true)
+    var bkashPersonalNumber = MutableStateFlow("01754237253")
+    
+    var isNagadEnabled = MutableStateFlow(true)
+    var nagadPersonalNumber = MutableStateFlow("01754237253")
+    
+    var isRocketEnabled = MutableStateFlow(true)
+    var rocketPersonalNumber = MutableStateFlow("017542372534")
+    
+    var isCodEnabled = MutableStateFlow(true)
+    
+    var customPaymentInstructionsBn = MutableStateFlow("বিকাশ, নগদ বা রকেট নম্বরে 'সেন্ড মানি' বা 'ক্যাশ আউট' করার পর ট্রানজেকশন আইডি (TxID) ও প্রেরক নম্বর নিচে প্রবিষ্ট করুন।")
+    var customPaymentInstructionsEn = MutableStateFlow("After completing 'Send Money' or 'Cash Out' to Bkash/Nagad/Rocket, type your TxID and Sender Phone in billing details below.")
 
     // --- USER PROFILE AUTHENTICATION ACTIONS ---
     fun authenticateUser(phone: String, pass: String): Boolean {
