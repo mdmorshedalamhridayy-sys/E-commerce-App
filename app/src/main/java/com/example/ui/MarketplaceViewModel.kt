@@ -9,6 +9,13 @@ import com.example.data.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+data class UserAccount(
+    val name: String,
+    val phone: String,
+    val pass: String,
+    val address: String
+)
+
 class MarketplaceViewModel(
     application: Application,
     private val repository: MarketplaceRepository
@@ -19,6 +26,15 @@ class MarketplaceViewModel(
         private set
 
     var currentSection = MutableStateFlow("BUYER") // "BUYER", "SELLER", "ADMIN"
+        private set
+
+    // --- USER LOGIN & REGISTRATION SESSIONS ---
+    var isUserLoggedIn = MutableStateFlow(false)
+        private set
+
+    var registeredUsers = MutableStateFlow(listOf(
+        UserAccount("Morshed Alam Hriday", "01754237253", "user123", "Mirpur-10, Dhaka, Bangladesh")
+    ))
         private set
 
     // --- USER PROFILE & ROLE SELECTION ---
@@ -165,6 +181,42 @@ class MarketplaceViewModel(
 
     fun logoutAdmin() {
         isAdminAuthenticated.value = false
+    }
+
+    // --- USER PROFILE AUTHENTICATION ACTIONS ---
+    fun authenticateUser(phone: String, pass: String): Boolean {
+        if (phone.isBlank() || pass.isBlank()) return false
+        val user = registeredUsers.value.find { it.phone == phone && it.pass == pass }
+        return if (user != null) {
+            currentBuyerName.value = user.name
+            currentBuyerPhone.value = user.phone
+            currentBuyerAddress.value = user.address
+            isUserLoggedIn.value = true
+            true
+        } else {
+            false
+        }
+    }
+
+    fun registerUser(name: String, phone: String, pass: String, address: String): Boolean {
+        if (name.isBlank() || phone.isBlank() || pass.isBlank()) return false
+        val exists = registeredUsers.value.any { it.phone == phone }
+        if (exists) return false
+        
+        val newList = registeredUsers.value + UserAccount(name, phone, pass, address)
+        registeredUsers.value = newList
+        currentBuyerName.value = name
+        currentBuyerPhone.value = phone
+        currentBuyerAddress.value = address
+        isUserLoggedIn.value = true
+        return true
+    }
+
+    fun logoutUser() {
+        isUserLoggedIn.value = false
+        currentBuyerName.value = "Guest User"
+        currentBuyerPhone.value = ""
+        currentBuyerAddress.value = ""
     }
 
     // --- BUYER ACTIONS ---
